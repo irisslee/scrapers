@@ -1,0 +1,11 @@
+READ ME FIRST
+
+Most files are there, some that are missing could not be downloaded because of some recent backend changes... but if you go to 
+
+http://www2.ed.gov/about/offices/list/ocr/docs/t9-rel-exempt/
+
+and add the file name right after, it will show the PDF in browser that can be downloaded. 
+
+for example 
+
+http://www2.ed.gov/about/offices/list/ocr/docs/t9-rel-exempt/arlington-baptist-college-response-05102016
