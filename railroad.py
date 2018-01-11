@@ -8,19 +8,30 @@ br.open('http://safetydata.fra.dot.gov/officeofsafety/publicsite/summary.aspx')
 
 response = br.response()
 
+output = open ('railway.csv','w')
+
 
 def select_form(form):
 	return form.attrs.get('action',None)== './summary.aspx'
 
 br.select_form(predicate=select_form)
 
-
-
-br.form['ctl00$ContentPlaceHolder1$DropDownYear']=['2003']
+br.form['ctl00$ContentPlaceHolder1$DropDownYear']=['2017']
 br.form['ctl00$ContentPlaceHolder1$ListBoxStats']=['r14']
 
 
 br.submit()
+
+chart = br.response().read()
+
+
+soup = BeautifulSoup(chart,'html.parser')
+
+table = soup.find_all('table')
+
+print table 
+
+
 
 
 # br.select_form(name = 'ctl00$ContentPlaceHolder1$DropDownYear')
