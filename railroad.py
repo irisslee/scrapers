@@ -23,13 +23,37 @@ br.form['ctl00$ContentPlaceHolder1$ListBoxStats']=['r14']
 br.submit()
 
 chart = br.response().read()
-
-
 soup = BeautifulSoup(chart,'html.parser')
-
 table = soup.find_all('table')
 
-print table 
+#this table has all the data
+item =  table[1]
+
+#first get all the states for row header
+states = item.find_all('th',{'class':'l t rowheader'})
+for state in states:
+	state.get_text()
+
+
+#get fatals only - year headers first aka first four years listed 
+years = item.find_all('th',{'class':'c header','scope':'col'})[:4]
+for year in years:
+	year.get_text()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
