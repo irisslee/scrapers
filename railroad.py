@@ -1,6 +1,7 @@
 import requests,time
-import mechanize
+import mechanize, lxml
 from bs4 import BeautifulSoup
+import pandas as pd
 
 
 br = mechanize.Browser()
@@ -8,40 +9,72 @@ br.open('http://safetydata.fra.dot.gov/officeofsafety/publicsite/summary.aspx')
 
 response = br.response()
 
-output = open ('railway.csv','w')
-
 
 def select_form(form):
 	return form.attrs.get('action',None)== './summary.aspx'
 
 br.select_form(predicate=select_form)
-
 br.form['ctl00$ContentPlaceHolder1$DropDownYear']=['2017']
 br.form['ctl00$ContentPlaceHolder1$ListBoxStats']=['r14']
-
-
 br.submit()
 
 chart = br.response().read()
-soup = BeautifulSoup(chart,'html.parser')
+soup = BeautifulSoup(chart,'lxml')
 table = soup.find_all('table')
 
 #this table has all the data
 item =  table[1]
 
+
+#create data dict.
+datadict=[]
+
 #first get all the states for row header
 states = item.find_all('th',{'class':'l t rowheader'})
-for state in states:
-	state.get_text()
+rowheader = [state.get_text() for state in states]
 
+rows = item.find('tbody').find_all('tr')
+for row in rows:
+	values = row.find_all('td')[:4]
+	data = [value.get_text() for value in values]
+	
 
-#get fatals only - year headers first aka first four years listed 
+# get fatals only - year headers first aka first four years listed 
 years = item.find_all('th',{'class':'c header','scope':'col'})[:4]
-for year in years:
-	year.get_text()
+
+year_header = [year.get_text() for year in years]
 
 
 
+# # #first get all the states for row header
+# # states = item.find_all('th',{'class':'l t rowheader'})
+# # rows = item.find('tbody').find_all('tr')
+
+# # for state in states:
+
+
+# # for row in rows:
+# # 	values = row.find_all('td')[0:4]
+# #  	data = [value.get_text() for value in values]
+# #  	data = [state.get_text() for state in states]+data
+# #  	data_list.append(data)
+
+# # print data_list
+
+
+header_list = ['State']+year_header
+df = pd.DataFrame(datadict,columns = header_list)
+df.to_csv('railwayfatal.csv',index=False)
+
+
+
+
+
+
+
+# fatal = pd.Dataframe({
+# 	""
+# 	})
 
 
 
