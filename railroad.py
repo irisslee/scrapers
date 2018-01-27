@@ -4,155 +4,94 @@ from bs4 import BeautifulSoup
 import pandas as pd
 
 
+
 br = mechanize.Browser()
-br.open('http://safetydata.fra.dot.gov/officeofsafety/publicsite/summary.aspx')
+url = 'http://safetydata.fra.dot.gov/officeofsafety/publicsite/summary.aspx'
 
-response = br.response()
-
+# br.open('http://safetydata.fra.dot.gov/officeofsafety/publicsite/summary.aspx')
+# response = br.response()
 
 def select_form(form):
 	return form.attrs.get('action',None)== './summary.aspx'
 
-br.select_form(predicate=select_form)
-br.form['ctl00$ContentPlaceHolder1$DropDownYear']=['2017']
-br.form['ctl00$ContentPlaceHolder1$ListBoxStats']=['r14']
-br.submit()
+# ##submit the right form
+# def submit_form(year):
+# 	br.open(url)
+# 	br.select_form(predicate=select_form)
+# 	br.form['ctl00$ContentPlaceHolder1$DropDownYear']=[item.name]
+# 	br.form['ctl00$ContentPlaceHolder1$ListBoxStats']=['r14'] # this does the states stuff 
+# 	br.submit()
 
-chart = br.response().read()
-soup = BeautifulSoup(chart,'lxml')
-table = soup.find_all('table')
+# #form submited, now into DF
+# def results_to_df (item, results):
 
-#this table has all the data
-item =  table[1]
 
 
-#create data dict.
-datadict=[]
+# #get right headers 
+# def headers()
 
-#first get all the states for row header
-states = item.find_all('th',{'class':'l t rowheader'})
-rowheader = [state.get_text() for state in states]
 
-rows = item.find('tbody').find_all('tr')
-for row in rows:
-	values = row.find_all('td')[:4]
-	data = [value.get_text() for value in values]
-	
 
-# get fatals only - year headers first aka first four years listed 
-years = item.find_all('th',{'class':'c header','scope':'col'})[:4]
 
-year_header = [year.get_text() for year in years]
 
 
 
-# # #first get all the states for row header
-# # states = item.find_all('th',{'class':'l t rowheader'})
-# # rows = item.find('tbody').find_all('tr')
 
-# # for state in states:
+#Find years to submit
+#Since each year has 3 previous years, item should be every 4 years 
+def get_years(url):
+	br.open(url)
+	br.select_form(predicate=select_form)
+	years = br.form.find_control('ctl00$ContentPlaceHolder1$DropDownYear')
+	return years
 
+for year in years:
+	print year.name
 
-# # for row in rows:
-# # 	values = row.find_all('td')[0:4]
-# #  	data = [value.get_text() for value in values]
-# #  	data = [state.get_text() for state in states]+data
-# #  	data_list.append(data)
+# #do all of the above 
+# def scrape (self):
 
-# # print data_list
 
 
-header_list = ['State']+year_header
-df = pd.DataFrame(datadict,columns = header_list)
-df.to_csv('railwayfatal.csv',index=False)
 
+# # #Works once from here --
 
+# br = mechanize.Browser()
+# br.open('http://safetydata.fra.dot.gov/officeofsafety/publicsite/summary.aspx')
 
 
 
+# def select_form(form):
+# 	return form.attrs.get('action',None)== './summary.aspx'
+# br.select_form(predicate=select_form)
 
+# br.form['ctl00$ContentPlaceHolder1$DropDownYear']=['2017']
+# br.form['ctl00$ContentPlaceHolder1$ListBoxStats']=['r14']
+# br.submit()
 
-# fatal = pd.Dataframe({
-# 	""
-# 	})
+# #start parsing
+# chart = br.response().read()
+# #puts the chart on sheet but need better headers, also only collecting FATAL
+# table = pd.read_html(chart)[1]
+# #only collects first 5 columns with all rows hence FATAL
+# fatal=table.iloc[:, 0:5]
 
+# #Creating headers to surface years
+# soup = BeautifulSoup(chart,'lxml').findAll('table')
+# item = soup[1]
+# years = item.find_all('th',{'class':'c header','scope':'col'})
+# year_header = [year.get_text() for year in years]
 
+# #new header here
+# header = ['State']+year_header
 
+# #setting new header to the fatal df 
+# fatal.columns=header
 
+# fatal.to_csv('fatal.csv',index=False)
 
 
 
 
 
 
-
-
-
-
-
-
-# br.select_form(name = 'ctl00$ContentPlaceHolder1$DropDownYear')
-# br['value']='2003'
-
-# br.select_form(name = 'ctl00$ContentPlaceHolder1$ListBoxStats')
-# br['value']='r14'
-
-# submit = br.sumbit(name='ctl00$ContentPlaceHolder1$ButtonSubmit',value='Generate Statistics')
-
-# http://toddhayton.com/2014/12/08/form-handling-with-mechanize-and-beautifulsoup/
-
-
-
-
-
-
-
-
-
-
-
-
-# url = requests.get('http://safetydata.fra.dot.gov/officeofsafety/publicsite/summary.aspx')
-
-# # path = raw_input('Users/sohyunlee/Desktop/pdfs')
-
-# html = url.content
-
-# soup = BeautifulSoup(html,'html.parser')
-
-
-
-
-# table = soup.find_all('table')
-
-# resulttable = table[2]
-
-# link_list = []
-
-# lists = resulttable.find_all('td')
-
-# rows = lists[:-1]
-
-# for row in rows:
-# 	link = row.find('a').text
-
-# 	pdf_links = ['http://www2.ed.gov/about/offices/list/ocr/docs/t9-rel-exempt/'+link]
-	
-# 	new_links = [str(pdf_links[0])for links in pdf_links]
-# 	# print new_links
-
-
-# 	for link in new_links:
-# 		file_name = link.split('/')[-1]
-	
-# 		print "Downloading file %s " % link
-
-# 		r = requests.get(link)
-
-
-# 		f =  open(file_name,'w') 
-# 		f.write(r.content)
-		
-# 		f.close()
-
-# 		time.sleep(10)	
