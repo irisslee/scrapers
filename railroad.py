@@ -8,48 +8,50 @@ import pandas as pd
 br = mechanize.Browser()
 url = 'http://safetydata.fra.dot.gov/officeofsafety/publicsite/summary.aspx'
 
-# br.open('http://safetydata.fra.dot.gov/officeofsafety/publicsite/summary.aspx')
-# response = br.response()
-
 def select_form(form):
 	return form.attrs.get('action',None)== './summary.aspx'
 
-# ##submit the right form
-# def submit_form(year):
-# 	br.open(url)
-# 	br.select_form(predicate=select_form)
-# 	br.form['ctl00$ContentPlaceHolder1$DropDownYear']=[item.name]
-# 	br.form['ctl00$ContentPlaceHolder1$ListBoxStats']=['r14'] # this does the states stuff 
-# 	br.submit()
+##submit the right form
+def submit_form(year):
+	br.open(url)
+	br.select_form(predicate=select_form)
+	br.form['ctl00$ContentPlaceHolder1$DropDownYear']=[item.name]
+	br.form['ctl00$ContentPlaceHolder1$ListBoxStats']=['r14'] # this does the states stuff 
+	br.submit()
 
-# #form submited, now into DF
-# def results_to_df (item, results):
+#form submited, now into DF
+def results_to_df (item, results):
+	chart = br.response().read()
+	table = pd.read_html(chart)[1]
+	fatal=table.iloc[:, 0:5]
+	fatal.columns=header
+	df=fatal.append
+	return df.to_csv('fatal.csv', index=False)
 
-
-
-# #get right headers 
-# def headers()
-
-
-
-
-
-
-
+#get right headers 
+def headers(chart):
+	soup = BeautifulSoup(chart,'lxml').findAll('table')
+	item = soup[1]
+	years = item.find_all('th',{'class':'c header','scope':'col'})
+	year_header = [year.get_text() for year in years]
+	header = ['State']+year_header
+	return header
 
 #Find years to submit
 #Since each year has 3 previous years, item should be every 4 years 
-def get_years(url):
+def get_years():
 	br.open(url)
 	br.select_form(predicate=select_form)
-	years = br.form.find_control('ctl00$ContentPlaceHolder1$DropDownYear')
-	return years
+	items = br.form.find_control('ctl00$ContentPlaceHolder1$DropDownYear')
+	return items
 
-for year in years:
-	print year.name
+#do all of the above 
+def scrape():
+	for item in items:
+		df=submit_form(item)
 
-# #do all of the above 
-# def scrape (self):
+
+scrape()
 
 
 
