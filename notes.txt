@@ -1,0 +1,10 @@
+
+Some resources
+http://toddhayton.com/2015/01/09/scraping-by-example-ntu-edu/
+https://github.com/thayton/ntu-edu/blob/master/ntu-edu.py
+
+
+
+https://github.com/datadesk/la-court-case-browser/blob/master/civil_court/court_scripts/download.py
+
+https://medium.com/python-pandemonium/how-to-speed-up-your-python-web-scraper-by-using-multiprocessing-f2f4ef838686
