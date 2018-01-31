@@ -1,8 +1,9 @@
 import requests,time
-import mechanize, lxml
+import mechanize, lxml, re
 from bs4 import BeautifulSoup
 import pandas as pd
 
+open ('fatal.csv','w')
 
 
 br = mechanize.Browser()
@@ -11,47 +12,63 @@ url = 'http://safetydata.fra.dot.gov/officeofsafety/publicsite/summary.aspx'
 def select_form(form):
 	return form.attrs.get('action',None)== './summary.aspx'
 
-##submit the right form
-def submit_form(year):
+##submit the right form and into df
+def submit_form(item):
+	final = pd.DataFrame([])
 	br.open(url)
 	br.select_form(predicate=select_form)
-	br.form['ctl00$ContentPlaceHolder1$DropDownYear']=[item.name]
+	br.form['ctl00$ContentPlaceHolder1$DropDownYear']=[item]
 	br.form['ctl00$ContentPlaceHolder1$ListBoxStats']=['r14'] # this does the states stuff 
 	br.submit()
-
-#form submited, now into DF
-def results_to_df (item, results):
 	chart = br.response().read()
 	table = pd.read_html(chart)[1]
-	fatal=table.iloc[:, 0:5]
-	fatal.columns=header
-	df=fatal.append
-	return df.to_csv('fatal.csv', index=False)
-
-#get right headers 
-def headers(chart):
+	results=table.iloc[:, 0:5]
 	soup = BeautifulSoup(chart,'lxml').findAll('table')
 	item = soup[1]
-	years = item.find_all('th',{'class':'c header','scope':'col'})
-	year_header = [year.get_text() for year in years]
+	years = item.find_all('th',{'class':re.compile('c [Hh]eader'),'scope':'col'})
+	year_header = [year.get_text() for year in years][:4]
 	header = ['State']+year_header
-	return header
+	print header
+	results.columns=header
+	return results
 
+	# fatal=[]
+	# fatal.append(results)
+	# fatal=pd.concat(fatal,axis=1)
+	# print fatal
+	# return fatal.to_csv('fatal.csv', index=False)
+	
+
+	# final = pd.concat([pd.DataFrame(result) for result in results],axis=1)
+	
+#add results to df
+def add_to_df(item,results):
+	fatal=[]
+	fatal.append(results)
+	fatal=pd.concat(fatal,axis=1)
+	print fatal
+	# return fatal.to_csv('fatal.csv', index=False)
+	
 #Find years to submit
-#Since each year has 3 previous years, item should be every 4 years 
 def get_years():
 	br.open(url)
 	br.select_form(predicate=select_form)
-	items = br.form.find_control('ctl00$ContentPlaceHolder1$DropDownYear')
+	items = br.form.find_control('ctl00$ContentPlaceHolder1$DropDownYear').get_items()
 	return items
 
-#do all of the above 
 def scrape():
+	items=get_years()
 	for item in items:
-		df=submit_form(item)
-
+		results = submit_form(item.name) 
+		add_to_df(item.name,results)
 
 scrape()
+
+
+
+
+
+
 
 
 
