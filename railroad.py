@@ -12,7 +12,9 @@ url = 'http://safetydata.fra.dot.gov/officeofsafety/publicsite/summary.aspx'
 def select_form(form):
 	return form.attrs.get('action',None)== './summary.aspx'
 
-##submit the right form and into df
+fatals=[]	
+
+#submit the right form and into df
 def submit_form(item):
 	final = pd.DataFrame([])
 	br.open(url)
@@ -20,33 +22,23 @@ def submit_form(item):
 	br.form['ctl00$ContentPlaceHolder1$DropDownYear']=[item]
 	br.form['ctl00$ContentPlaceHolder1$ListBoxStats']=['r14'] # this does the states stuff 
 	br.submit()
-	chart = br.response().read()
-	table = pd.read_html(chart)[1]
+	return br.response().read()
+
+def add_to_df(page,fatals):
+	table = pd.read_html(page)[1]
 	results=table.iloc[:, 0:5]
-	soup = BeautifulSoup(chart,'lxml').findAll('table')
-	item = soup[1]
-	years = item.find_all('th',{'class':re.compile('c [Hh]eader'),'scope':'col'})
+	soup = BeautifulSoup(page,'lxml').findAll('table')
+	table = soup[1]
+	years = table.find_all('th',{'class':re.compile('c [Hh]eader'),'scope':'col'})
 	year_header = [year.get_text() for year in years][:4]
 	header = ['State']+year_header
 	print header
 	results.columns=header
-	return results
-
-	# fatal=[]
-	# fatal.append(results)
+	fatals.append(results)
+	return fatals 
+	
 	# fatal=pd.concat(fatal,axis=1)
 	# print fatal
-	# return fatal.to_csv('fatal.csv', index=False)
-	
-
-	# final = pd.concat([pd.DataFrame(result) for result in results],axis=1)
-	
-#add results to df
-def add_to_df(item,results):
-	fatal=[]
-	fatal.append(results)
-	fatal=pd.concat(fatal,axis=1)
-	print fatal
 	# return fatal.to_csv('fatal.csv', index=False)
 	
 #Find years to submit
@@ -56,14 +48,18 @@ def get_years():
 	items = br.form.find_control('ctl00$ContentPlaceHolder1$DropDownYear').get_items()
 	return items
 
+#each put those years into submit form 
 def scrape():
 	items=get_years()
 	for item in items:
-		results = submit_form(item.name) 
-		add_to_df(item.name,results)
+		page = submit_form(item.name) 
+		add_to_df(page,fatals)
 
 scrape()
 
+#merge collected dfs on key column "state"
+final = reduce(lambda left,right: pd.merge(left,right,on=['State'],how='outer'),fatals).fillna('nodata')
+final.to_csv('fatal.csv', index=False)
 
 
 
@@ -73,7 +69,11 @@ scrape()
 
 
 
-# # #Works once from here --
+
+
+
+
+## works for one year
 
 # br = mechanize.Browser()
 # br.open('http://safetydata.fra.dot.gov/officeofsafety/publicsite/summary.aspx')
